@@ -7,6 +7,9 @@ The user should be able to enter a pet and owner information, enter a task (name
 **a. Initial design**
 
 - Briefly describe your initial UML design.
+
+My initial UML design models a simple pet care scheduling system with four core classes that separate the user context, pet information, task definition, and scheduling logic. The design follows a clear structure where data (PetOwner, Pet, Task) is separated from decision-making (Scheduler), and the Scheduler coordinates everything to produce a prioritized daily plan.
+
 - What classes did you include, and what responsibilities did you assign to each?
 
 Class: PetOwner - name, attributes; available_time_per_day; method - update_available_time
@@ -17,10 +20,23 @@ Class: Task - a single task; attributes - name, duration, priority; methods - up
 
 Class: Scheduler - creates the plan; attributes - tasks, pet, constraints; methods - generate_schedule, add_task
 
+The PetOwner class stores the user’s name and available daily time budget. The Pet class stores the pet’s profile information and links it to its owner. The Task class represents individual care activities, including their duration and priority, and includes logic for updating and estimating urgency. The Scheduler class manages all tasks for a given pet and is responsible for adding tasks and generating a schedule by sorting tasks based on priority.
+
 **b. Design changes**
 
 - Did your design change during implementation?
+
+I changed a bit based on Copilot suggestions
+
 - If yes, describe at least one change and why you made it.
+
+Change 1: Added `owner` reference to Scheduler.
+The original design required the Scheduler to access the owner indirectly through `Pet.owner`. By adding a direct `owner` parameter to the Scheduler's constructor, the scheduler can now directly check whether tasks fit within the owner's available time budget which created a straightforward way to validate that the total scheduled task duration doesn't exceed the owner's capacity.
+
+Change 2: Enhanced `add_task()` with capacity validation. 
+The original `add_task()` method accepted tasks without any constraints checking. Now it validates before adding any task, calculating the cumulative duration and raising an error if adding the task would exceed the owner's available time. The system was previously vulnerable to silently creating infeasible schedules so this helped control for it.
+
+
 
 ---
 
