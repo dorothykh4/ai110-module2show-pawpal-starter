@@ -2,10 +2,20 @@
 
 ## 1. System Design
 
+The user should be able to enter a pet and owner information, enter a task (name, duration, priority), edit a task, delete the task, view the generated plan
+
 **a. Initial design**
 
 - Briefly describe your initial UML design.
 - What classes did you include, and what responsibilities did you assign to each?
+
+Class: PetOwner - name, attributes; available_time_per_day; method - update_available_time
+
+Class: Pet - an animal; attributes - name, species, age, special_needs, owner; methods - update_info
+
+Class: Task - a single task; attributes - name, duration, priority; methods - update_task, adjust_priority, estimate_urgency
+
+Class: Scheduler - creates the plan; attributes - tasks, pet, constraints; methods - generate_schedule, add_task
 
 **b. Design changes**
 
