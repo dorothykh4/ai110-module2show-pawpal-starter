@@ -1,6 +1,13 @@
 import streamlit as st
 
-from pawpal_system import Pet, PetOwner, Scheduler, Task, TaskFrequency
+from pawpal_system import (
+    Pet,
+    PetOwner,
+    Scheduler,
+    Task,
+    TaskFrequency,
+    TaskStatus,
+)
 
 st.set_page_config(page_title="PawPal+", page_icon="🐾", layout="centered")
 
@@ -160,20 +167,73 @@ if st.button("Add task"):
 
 all_tasks = owner.get_all_tasks()
 if all_tasks:
+    ordered_tasks = scheduler.sort_tasks_by_time(all_tasks)
     st.write("Current tasks:")
     st.table([
         {
             "pet": task.pet.name if task.pet else "-",
             "title": task.name,
+            "time": task.time,
             "duration_minutes": task.duration,
             "priority": task.priority,
             "frequency": task.frequency.value,
             "status": task.status.value,
         }
-        for task in all_tasks
+        for task in ordered_tasks
     ])
 else:
     st.info("No tasks yet. Add one above.")
+
+st.markdown("### Sorted & Filtered Task View")
+filter_col1, filter_col2 = st.columns(2)
+with filter_col1:
+    pet_filter = st.selectbox(
+        "Filter by pet",
+        ["All pets"] + pet_names if pet_names else ["All pets"],
+    )
+with filter_col2:
+    status_filter = st.selectbox(
+        "Filter by status",
+        ["all", "pending", "in_progress", "completed"],
+        index=1,
+    )
+
+status_filter_map = {
+    "all": None,
+    "pending": TaskStatus.PENDING,
+    "in_progress": TaskStatus.IN_PROGRESS,
+    "completed": TaskStatus.COMPLETED,
+}
+
+selected_status = status_filter_map[status_filter]
+selected_pet = None if pet_filter == "All pets" else pet_filter
+
+filtered_tasks = scheduler.filter_tasks(
+    status=selected_status,
+    pet_name=selected_pet,
+)
+filtered_sorted_tasks = scheduler.sort_tasks_by_time(filtered_tasks)
+
+if filtered_sorted_tasks:
+    st.success(
+        f"Showing {len(filtered_sorted_tasks)} task(s) "
+        f"for pet='{pet_filter}', status='{status_filter}'."
+    )
+    st.table([
+        {
+            "pet": task.pet.name if task.pet else "-",
+            "title": task.name,
+            "time": task.time,
+            "duration_minutes": task.duration,
+            "priority": task.priority,
+            "frequency": task.frequency.value,
+            "status": task.status.value,
+            "due_date": str(task.due_date),
+        }
+        for task in filtered_sorted_tasks
+    ])
+else:
+    st.warning("No tasks match the current filters.")
 
 st.divider()
 
@@ -186,17 +246,28 @@ if st.button("Generate schedule"):
         if not schedule:
             st.info("No pending tasks to schedule yet.")
         else:
+            schedule_by_time = scheduler.sort_tasks_by_time(schedule)
             st.success("Today's Schedule")
             st.table([
                 {
                     "pet": task.pet.name if task.pet else "-",
                     "task": task.name,
+                    "time": task.time,
                     "duration_minutes": task.duration,
                     "priority": task.priority,
                     "urgency": task.estimate_urgency(),
                 }
-                for task in schedule
+                for task in schedule_by_time
             ])
+
+            warnings = scheduler.get_schedule_warnings()
+            if warnings:
+                st.warning("Scheduling conflicts detected:")
+                for warning in warnings:
+                    st.code(warning)
+            else:
+                st.success("No scheduling conflicts detected.")
+
             st.caption(scheduler.get_daily_summary())
     except ValueError as exc:
         st.error(str(exc))

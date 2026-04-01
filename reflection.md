@@ -136,10 +136,16 @@ These tests prevent invalid state (e.g., infeasible schedules, corrupted data) a
 
 - What part of this project are you most satisfied with?
 
+I am most satisfied with how the scheduler logic came together in a clean way. I like that it can sort tasks, filter by status/pet, detect conflicts, and handle recurring tasks after completion. It feels like the app is not just storing data but actually making useful planning decisions.
+
 **b. What you would improve**
 
 - If you had another iteration, what would you improve or redesign?
 
+If I had another iteration, I would improve the scheduling algorithm so it balances both priority and time better instead of mostly priority-first. I would also add more edge-case tests, especially around monthly recurrence and late-night tasks that cross midnight. On the UI side, I would add an easier way to edit or reschedule tasks directly from the schedule table.
+
 **c. Key takeaway**
 
 - What is one important thing you learned about designing systems or working with AI on this project?
+
+My biggest takeaway is that AI is most helpful when I use it like a coding partner, not a copy-paste answer machine. It helped me move faster, but I still had to verify logic, test edge cases, and make final design choices myself. I also learned that small design decisions early (like class relationships and method responsibilities) make implementation much easier later.
