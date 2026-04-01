@@ -45,12 +45,30 @@ The original `add_task()` method accepted tasks without any constraints checking
 **a. Constraints and priorities**
 
 - What constraints does your scheduler consider (for example: time, priority, preferences)?
+
+My scheduler considers three main constraints:
+
+1. **Time Budget**: Owner's `available_time_per_day` (180 minutes in the example). The scheduler validates in `generate_schedule()` that total task duration doesn't exceed this limit, raising an error if infeasible.
+
+2. **Priority**: Tasks have priority values (1-10). The `generate_schedule()` method sorts tasks by priority in descending order, ensuring highest-priority tasks are listed first.
+
+3. **Time of Day**: Tasks specify a scheduled time (HH:MM format, e.g., "09:00"). The `sort_tasks_by_time()` method can order tasks chronologically, though the default schedule prioritizes by priority value rather than time.
+
 - How did you decide which constraints mattered most?
+
+I decided priority matters most by making it the primary sort key in `generate_schedule()` (line 698). This reflects the requirement that critical tasks (feeding, health concerns) should be done regardless of when they're scheduled.
 
 **b. Tradeoffs**
 
 - Describe one tradeoff your scheduler makes.
+
+My scheduler makes a critical tradeoff: **Priority-first scheduling that accepts time conflicts**.
+
+In `generate_schedule()`, tasks are sorted by priority without reordering them to their scheduled times. Conflicts are detected and reported as warnings, but they don't prevent schedule generation. Additionally, in `detect_conflicts()`, the default `strict_mode=False` (line 595) only flags conflicts for tasks on the *same pet*, assuming the owner can work on multiple pets in parallel.
+
 - Why is that tradeoff reasonable for this scenario?
+
+Pet owners often juggle multiple animals simultaneously (e.g., feeding the dog while the cat plays nearby). Preventing high-priority tasks from being scheduled just because of a time conflict could leave pets unfed or unmedicated. Warning the owner about conflicts lets them make deliberate trade-offs: they can adjust times manually, remove lower-priority conflicting tasks, or expand available time.
 
 ---
 
@@ -59,12 +77,22 @@ The original `add_task()` method accepted tasks without any constraints checking
 **a. How you used AI**
 
 - How did you use AI tools during this project (for example: design brainstorming, debugging, refactoring)?
+
+I used AI (Copilot) primarily for design brainstorming during the initial UML phase, and then during implementation for suggesting enhancements to the core classes. The AI helped validate design decisions and suggested improvements like adding the `owner` parameter to Scheduler and implementing capacity validation in `add_task_to_pet()`.
+
 - What kinds of prompts or questions were most helpful?
+
+Questions about validation constraints and feasibility checking were most helpful. Asking "How do I ensure a schedule is feasible?" led to suggestions for capacity validation and constraint checking. Questions about recurring task logic and time conflict detection also produced clear, actionable suggestions.
 
 **b. Judgment and verification**
 
 - Describe one moment where you did not accept an AI suggestion as-is.
+
+**Adding capacity validation to `add_task_to_pet()`**: The AI suggested adding validation that calculates cumulative durations across all pets and raises `ValueError` if adding a task exceeds the owner's budget (lines 728–746). Rather than accepting this immediately, I recognized the core issue: the original design accepted all tasks without checking time constraints, making the system "vulnerable to silently creating infeasible schedules."
+
 - How did you evaluate or verify what the AI suggested?
+
+I tested the validation by attempting to add tasks that together exceed 180 minutes, confirming the error was raised appropriately. I also verified the logic calculated durations correctly by tracing through the implementation: summing pending tasks for the specific pet plus all other pets, then checking if the total would exceed available time.
 
 ---
 
@@ -73,12 +101,32 @@ The original `add_task()` method accepted tasks without any constraints checking
 **a. What you tested**
 
 - What behaviors did you test?
+
+My code prioritizes **boundary and constraint validation**:
+- Invalid inputs (negative age, empty names, priority outside 1-10 range)
+- Capacity constraints (total task duration vs. available time)
+- Time format validation (HH:MM format, hours 00-23, minutes 00-59)
+- Task status transitions (PENDING → IN_PROGRESS → COMPLETED)
+- Recurring task generation (creating next task instances with calculated due dates)
+- Conflict detection (overlapping task times)
+
 - Why were these tests important?
+
+These tests prevent invalid state (e.g., infeasible schedules, corrupted data) and ensure the scheduler fails fast with clear error messages rather than producing silently incorrect plans.
 
 **b. Confidence**
 
 - How confident are you that your scheduler works correctly?
+
+**Confidence: Medium-High** for the core design. The class structure is solid and handles most validation. Recurring task logic is well-implemented. However, there are gaps in comprehensive testing—no explicit tests for what happens when adding a recurring task that would exceed capacity, or edge cases around time wraparound.
+
 - What edge cases would you test next if you had more time?
+
+1. Adding a recurring DAILY task right at the time limit—can the next occurrence even be scheduled?
+2. Tasks with 0 duration or exactly 1440+ minutes (full day or more)
+3. Tasks scheduled at 23:00 for 120 minutes (ends at 01:00 next day)—how should wraparound be handled?
+4. Marking a task complete multiple times—does completion_count keep incrementing correctly?
+5. Pet/owner relationships: Can a pet's owner change mid-schedule? How does that affect task assignments?
 
 ---
 

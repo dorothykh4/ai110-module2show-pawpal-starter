@@ -63,6 +63,7 @@ def main():
         pet=luna,
         description="Walk around the park",
         frequency=TaskFrequency.DAILY,
+        time="09:00",  # 09:00-09:30
     )
     owner.get_pet("Luna").add_task(task_1)
 
@@ -73,6 +74,7 @@ def main():
         pet=luna,
         description="Breakfast and dinner",
         frequency=TaskFrequency.DAILY,
+        time="08:00",
     )
     owner.get_pet("Luna").add_task(task_2)
 
@@ -83,6 +85,7 @@ def main():
         pet=luna,
         description="Fetch and tug",
         frequency=TaskFrequency.DAILY,
+        time="09:15",  # 09:15-09:35 (CONFLICTS with Morning Walk!)
     )
     owner.get_pet("Luna").add_task(task_3)
 
@@ -164,8 +167,14 @@ def main():
         for i, task in enumerate(scheduled, 1):
             print(
                 f"  {i}. {task.name} ({task.duration} min) "
-                f"- Priority: {task.priority}/10 - {task.estimate_urgency()}"
+                f"at {task.time} - Priority: {task.priority}/10 - {task.estimate_urgency()}"
             )
+
+        # Display any conflicts for this pet
+        conflicts = scheduler.get_schedule_warnings()
+        if conflicts:
+            for conflict_msg in conflicts:
+                print(f"\n{conflict_msg}\n")
         print()
 
     # Display daily summary
