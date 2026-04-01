@@ -5,6 +5,7 @@ from pawpal_system import (
     PetOwner,
     Pet,
     Task,
+    Scheduler,
     TaskStatus,
     TaskFrequency,
 )
@@ -23,6 +24,8 @@ class TestPawPalSystem(unittest.TestCase):
             special_needs="None",
             owner=self.owner,
         )
+        self.owner.add_pet(self.pet)
+        self.scheduler = Scheduler(owner=self.owner, constraints=[])
         self.task = Task(
             name="Test Task",
             duration=30,
@@ -93,6 +96,89 @@ class TestPawPalSystem(unittest.TestCase):
 
         # Assert: pet should have three tasks
         self.assertEqual(len(self.pet.get_tasks()), 3)
+
+    def test_sorting_correctness_returns_chronological_order(self):
+        """Verify tasks are returned in ascending chronological order by time."""
+        morning_task = Task(
+            name="Morning Walk",
+            duration=20,
+            priority=4,
+            pet=self.pet,
+            frequency=TaskFrequency.ONCE,
+            time="08:00",
+        )
+        noon_task = Task(
+            name="Lunch Feed",
+            duration=10,
+            priority=6,
+            pet=self.pet,
+            frequency=TaskFrequency.ONCE,
+            time="12:00",
+        )
+        early_task = Task(
+            name="Early Med",
+            duration=5,
+            priority=9,
+            pet=self.pet,
+            frequency=TaskFrequency.ONCE,
+            time="06:30",
+        )
+
+        sorted_tasks = self.scheduler.sort_tasks_by_time(
+            [noon_task, morning_task, early_task]
+        )
+
+        self.assertEqual(
+            [task.time for task in sorted_tasks],
+            ["06:30", "08:00", "12:00"],
+        )
+
+    def test_daily_recurrence_creates_new_task_for_following_day(self):
+        """Verify completing a daily task creates a pending task due the next day."""
+        daily_task = Task(
+            name="Daily Feed",
+            duration=15,
+            priority=7,
+            pet=self.pet,
+            frequency=TaskFrequency.DAILY,
+            time="09:00",
+        )
+        self.pet.add_task(daily_task)
+        original_due_date = daily_task.due_date
+
+        next_task = self.scheduler.complete_task(daily_task)
+
+        self.assertEqual(daily_task.status, TaskStatus.COMPLETED)
+        self.assertIsNotNone(next_task)
+        self.assertEqual(next_task.frequency, TaskFrequency.DAILY)
+        self.assertEqual(next_task.status, TaskStatus.PENDING)
+        self.assertEqual(next_task.due_date, original_due_date.fromordinal(original_due_date.toordinal() + 1))
+        self.assertIn(next_task, self.pet.get_tasks())
+
+    def test_conflict_detection_flags_duplicate_times(self):
+        """Verify scheduler reports a conflict for duplicate start times."""
+        first_task = Task(
+            name="Breakfast",
+            duration=30,
+            priority=6,
+            pet=self.pet,
+            frequency=TaskFrequency.ONCE,
+            time="09:00",
+        )
+        second_task = Task(
+            name="Medication",
+            duration=15,
+            priority=8,
+            pet=self.pet,
+            frequency=TaskFrequency.ONCE,
+            time="09:00",
+        )
+
+        conflicts = self.scheduler.detect_conflicts([first_task, second_task])
+
+        self.assertEqual(len(conflicts), 1)
+        self.assertIn("[CONFLICT", conflicts[0])
+        self.assertIn("09:00", conflicts[0])
 
 
 if __name__ == "__main__":
