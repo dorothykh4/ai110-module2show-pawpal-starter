@@ -76,7 +76,17 @@ Reasoning: all current tests pass (7/7), and they validate critical scheduling f
 
 ## Demo
 
-<a href="1.jpg" target="_blank"><img src='1.jpg' title='PawPal App' width='' alt='PawPal App' class='center-block' /></a>.
-<a href="2.jpg" target="_blank"><img src='2.jpg' title='PawPal App' width='' alt='PawPal App' class='center-block' /></a>.
-<a href="3.jpg" target="_blank"><img src='3.jpg' title='PawPal App' width='' alt='PawPal App' class='center-block' /></a>.
+<a href="1.jpg" target="_blank">
+  <img src="1.jpg" alt="PawPal App" />
+</a>
+<a href="2.jpg" target="_blank">
+  <img src="2.jpg" alt="PawPal App" />
+</a>
+<a href="3.jpg" target="_blank">
+  <img src="3.jpg" alt="PawPal App" />
+</a>
+
+[![PawPal App](1.jpg)](1.jpg)
+[![PawPal App](2.jpg)](2.jpg)
+[![PawPal App](3.jpg)](3.jpg)
 
